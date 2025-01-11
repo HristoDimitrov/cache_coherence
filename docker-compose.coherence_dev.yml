@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  coherence_dev:
+    container_name: coherence_dev  # Explicitly name the container
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.coherence_dev
+    # If you have environment vars, add them here:
+    environment:
+      - SYSTEMC_HOME=/usr/local/systemc
+      - LD_LIBRARY_PATH=/usr/local/systemc/lib-linux64
+    volumes:
+      - ./:/home/devuser/my-cache-coherence-project
+    working_dir: /home/devuser/my-cache-coherence-project
+    command: ["tail", "-f", "/dev/null"]  # Keep the container running
+    tty: true  # Allocate a TTY (for bash)
+
+  coherence_shell:
+    container_name: coherence_shell  # Explicit name for the shell service
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.coherence_dev
+    # If you have environment vars, add them here:
+    environment:
+      - SYSTEMC_HOME=/usr/local/systemc
+      - LD_LIBRARY_PATH=/usr/local/systemc/lib-linux64
+    volumes:
+      - ./:/home/devuser/my-cache-coherence-project
+    working_dir: /home/devuser/my-cache-coherence-project
+    stdin_open: true  # Keep stdin open
+    tty: true  # Allocate a TTY for interactive shell
+    command: ["/bin/bash"]  # Automatically start a bash shell
+    depends_on:
+      - coherence_dev  # Ensure coherence_dev is running

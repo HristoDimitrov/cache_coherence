@@ -1,0 +1,44 @@
+# docker/Dockerfile.coherence_dev
+
+FROM ubuntu:20.04
+
+LABEL maintainer="Your Name <you@example.com>"
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install required packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    libgtk-3-dev \
+    ca-certificates \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install SystemC 2.3.3 from source
+WORKDIR /opt
+RUN wget https://accellera.org/images/downloads/standards/systemc/systemc-2.3.3.gz \
+    && tar -xvf systemc-2.3.3.gz \
+    && rm systemc-2.3.3.gz
+
+WORKDIR /opt/systemc-2.3.3
+RUN mkdir build && cd build && \
+    CXXFLAGS="-std=c++11" ../configure --prefix=/usr/local/systemc && \
+    make -j$(nproc) && \
+    make install
+
+# Set env variables so the SystemC library is discoverable
+ENV SYSTEMC_HOME=/usr/local/systemc
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SYSTEMC_HOME/lib-linux64
+ENV CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$SYSTEMC_HOME/include
+
+# Create a non-root user (devuser) for better dev experience
+RUN useradd -ms /bin/bash devuser
+USER devuser
+WORKDIR /home/devuser
+
+# Default command: keep container alive
+CMD ["tail", "-f", "/dev/null"]
